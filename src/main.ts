@@ -180,6 +180,7 @@ function init() {
   setupFAQ();
   setupEasterEgg();
   setupContactForm();
+  checkTwitchLiveStatus();
 
   // Smooth entrance for first load or SPA load
   const mainContent = document.getElementById("main-content");
@@ -328,6 +329,18 @@ function setupPageTransitions() {
         if (pushState) {
           history.pushState({ url }, "", url);
         }
+        
+        // Update <title> data-i18n attribute to ensure the correct translation key is used
+        const newTitleEl = doc.querySelector("title");
+        const currentTitleEl = document.querySelector("title");
+        if (newTitleEl && currentTitleEl) {
+          const i18nKey = newTitleEl.getAttribute("data-i18n");
+          if (i18nKey) {
+            currentTitleEl.setAttribute("data-i18n", i18nKey);
+          } else {
+            currentTitleEl.removeAttribute("data-i18n");
+          }
+        }
         document.title = newTitle;
 
         // Content tauschen
@@ -339,8 +352,26 @@ function setupPageTransitions() {
         // Re-run initializations
         init();
         
-        // Scroll to top
-        window.scrollTo(0, 0);
+        // Scroll to top or anchor if hash is present
+        try {
+          const parsedUrl = new URL(url);
+          if (parsedUrl.hash) {
+            const targetEl = document.querySelector(parsedUrl.hash);
+            if (targetEl) {
+              targetEl.scrollIntoView({ behavior: "instant" as ScrollBehavior });
+              // Set focus for accessibility
+              if (targetEl instanceof HTMLElement) {
+                targetEl.focus();
+              }
+            } else {
+              window.scrollTo(0, 0);
+            }
+          } else {
+            window.scrollTo(0, 0);
+          }
+        } catch (e) {
+          window.scrollTo(0, 0);
+        }
       }
     } catch (error) {
       console.error("Failed to load page via SPA:", error);
@@ -670,4 +701,26 @@ function setupContactForm() {
       successMsg.style.display = "none";
     }, 7000);
   });
+}
+
+// --- Twitch Live Status Indicator ---
+async function checkTwitchLiveStatus() {
+  const indicator = document.getElementById("live-indicator");
+  if (!indicator) return;
+
+  try {
+    const response = await fetch("https://decapi.me/twitch/uptime/nhywyll");
+    if (response.ok) {
+      const text = await response.text();
+      // If the response is not "Channel is offline" (or translated versions), they are live!
+      const isOffline = text.toLowerCase().includes("offline");
+      if (!isOffline) {
+        indicator.classList.remove("hidden");
+      } else {
+        indicator.classList.add("hidden");
+      }
+    }
+  } catch (error) {
+    console.error("Error checking Twitch live status:", error);
+  }
 }

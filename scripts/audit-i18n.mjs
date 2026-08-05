@@ -26,9 +26,9 @@ function getKeysFromHtml(filePath) {
   if (!fs.existsSync(filePath)) return new Set();
   const content = fs.readFileSync(filePath, "utf-8");
   const keys = new Set();
-  // Match data-i18n, data-i18n-html, data-i18n-placeholder
+  // Match data-i18n, data-i18n-html, data-i18n-placeholder, data-i18n-aria-label, data-i18n-title
   const matches = content.matchAll(
-    /data-i18n(?:-html|-placeholder)?=["']([a-zA-Z0-9_-]+)["']/g,
+    /data-i18n(?:-html|-placeholder|-aria-label|-title)?=["']([a-zA-Z0-9_-]+)["']/g,
   );
   for (const match of matches) {
     keys.add(match[1]);
