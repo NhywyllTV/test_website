@@ -108,3 +108,35 @@ test_website/
 ├── imprint.html            # Legal framework
 └── 404.html                # Custom error page
 ```
+
+---
+
+## 🎨 Design System & Style Guidelines
+
+To keep the website looking cohesive and aligned with Nhywyll's VTuber identity, all styles should adhere to the following logo-matched color system and visual guidelines:
+
+### 1. Logo-Matched Color Palette
+All color values are defined as CSS variables in `src/styles.css`.
+
+| Theme | Element | Variable | Color | Note |
+| :--- | :--- | :--- | :--- | :--- |
+| **Dark Theme** | Primary Background | `--bg-primary` | `#0f101b` | Deep dark slate/indigo |
+| | Secondary Background | `--bg-secondary` | `#17192c` | Slightly lighter dark indigo |
+| | Cards & Containers | `--bg-card` | `rgba(30, 33, 58, 0.65)` | Dark indigo glass panel |
+| | Primary Accent | `--accent-primary` | `#7d88c4` | Dusty lavender from logo text |
+| | Secondary Accent | `--accent-secondary` | `#4db6ac` | Soft mint-teal from logo stars |
+| **Light Theme**| Primary Background | `--bg-primary` | `#f6f7fb` | Soft lavender cool-white |
+| | Card Background | `--bg-card` | `rgba(235, 238, 248, 0.85)`| Soft lavender-gray |
+| | Primary Typography | `--text-primary` | `#2d314e` | Deep dark slate-navy |
+| | Primary Accent | `--accent-primary` | `#5c6494` | Darker dusty lavender |
+| | Secondary Accent | `--accent-secondary` | `#0d9488` | Saturated teal/cyan |
+
+### 2. Typography
+* **Primary Font**: `Outfit` (loaded locally in `public/fonts/`). Used for headings, body, and navigation.
+* **Secondary / Fallbacks**: `Segoe UI`, `Tahoma`, `Geneva`, `Verdana`, `sans-serif`.
+
+### 3. Visual Guidelines (Cozy, Not "Tech-RGB")
+* **Soft & Organic**: Avoid pure black/white backdrops and harsh neon/cyber-RGB scrolling lines. The design should feel cozy, warm, and integrated with the character illustration.
+* **Glassmorphic Panels**: Cards should use subtle blur (`backdrop-filter: blur(20px)`) and thin, tinted borders (`--glass-border`) matching the primary accent color.
+* **Gradients**: Text gradients and link underlines must transition smoothly between the primary (lavender) and secondary (teal) accents.
+
