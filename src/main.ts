@@ -586,6 +586,17 @@ function initAnalytics() {
         gtag('config', 'G-R18WRP31XQ');
     `;
   document.head.appendChild(script2);
+
+  // Metricool Tracker (Website-Statistik) dynamisch einfuegen
+  const metricool = document.createElement("script");
+  metricool.async = true;
+  metricool.src = "https://tracker.metricool.com/resources/be.js";
+  metricool.onload = () => {
+    (window as unknown as {
+      beTracker?: { t: (o: { hash: string }) => void };
+    }).beTracker?.t({ hash: "8d9a03967f7bdb8481d6ec6f0c9bd793" });
+  };
+  document.head.appendChild(metricool);
 }
 
 // --- FAQ Accordion ---
