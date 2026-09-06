@@ -8,7 +8,7 @@
 <meta name="robots" content="index, follow" />
 <meta
   http-equiv="Content-Security-Policy"
-  content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://nhywyll.com https://www.googletagmanager.com https://www.google-analytics.com; connect-src 'self' https://www.google-analytics.com https://stats.g.doubleclick.net; font-src 'self';"
+  content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://tracker.metricool.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://nhywyll.com https://www.googletagmanager.com https://www.google-analytics.com https://tracker.metricool.com; connect-src 'self' https://www.google-analytics.com https://stats.g.doubleclick.net https://tracker.metricool.com; font-src 'self';"
 />
 
 <!-- Favicon -->
@@ -49,6 +49,22 @@
     }
     document.documentElement.dataset.theme = initialTheme;
   })();
+</script>
+
+<!-- Metricool Tracker -->
+<script>
+  function loadScript(a) {
+    var b = document.getElementsByTagName("head")[0],
+      c = document.createElement("script");
+    (c.type = "text/javascript"),
+      (c.src = "https://tracker.metricool.com/resources/be.js"),
+      (c.onreadystatechange = a),
+      (c.onload = a),
+      b.appendChild(c);
+  }
+  loadScript(function () {
+    beTracker.t({ hash: "8d9a03967f7bdb8481d6ec6f0c9bd793" });
+  });
 </script>
 
 <link rel="stylesheet" href="/src/styles.css" />
