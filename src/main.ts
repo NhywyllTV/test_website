@@ -569,13 +569,22 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// Produktion und Test-Umgebung melden in getrennte Properties.
+const PROD_HOSTNAME = "nhywyll.com";
+const GA_ID_PROD = "G-8NZ8JX48ZP";
+const GA_ID_TEST = "G-R18WRP31XQ";
+const METRICOOL_HASH = "8d9a03967f7bdb8481d6ec6f0c9bd793";
+
+const isProduction = () => window.location.hostname === PROD_HOSTNAME;
+
 function initAnalytics() {
-  console.log("Analytics initialized (Consent granted).");
+  const gaId = isProduction() ? GA_ID_PROD : GA_ID_TEST;
+  console.log(`Analytics initialized (Consent granted). Property: ${gaId}`);
 
   // Google Analytics (GA4) Skript dynamisch einfügen
   const script1 = document.createElement("script");
   script1.async = true;
-  script1.src = "https://www.googletagmanager.com/gtag/js?id=G-R18WRP31XQ";
+  script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
   document.head.appendChild(script1);
 
   const script2 = document.createElement("script");
@@ -583,18 +592,23 @@ function initAnalytics() {
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', 'G-R18WRP31XQ');
+        gtag('config', '${gaId}');
     `;
   document.head.appendChild(script2);
 
-  // Metricool Tracker (Website-Statistik) dynamisch einfuegen
+  // Metricool kennt nur eine Marke, daher ausschliesslich auf der Live-Domain
+  // laden - sonst verfaelschen Test-Zugriffe die Statistik.
+  if (!isProduction()) return;
+
   const metricool = document.createElement("script");
   metricool.async = true;
   metricool.src = "https://tracker.metricool.com/resources/be.js";
   metricool.onload = () => {
-    (window as unknown as {
-      beTracker?: { t: (o: { hash: string }) => void };
-    }).beTracker?.t({ hash: "8d9a03967f7bdb8481d6ec6f0c9bd793" });
+    (
+      window as unknown as {
+        beTracker?: { t: (o: { hash: string }) => void };
+      }
+    ).beTracker?.t({ hash: METRICOOL_HASH });
   };
   document.head.appendChild(metricool);
 }
