@@ -36,7 +36,7 @@ function updateTexts() {
   }
 
   const elements = document.querySelectorAll(
-    "[data-i18n], [data-i18n-html], [data-i18n-placeholder], [data-i18n-aria-label], [data-i18n-title]",
+    "[data-i18n], [data-i18n-html], [data-i18n-placeholder], [data-i18n-aria-label], [data-i18n-title], [data-i18n-alt]",
   );
 
   elements.forEach((el) => {
@@ -58,6 +58,12 @@ function updateTexts() {
     const placeholderKey = htmlEl.getAttribute("data-i18n-placeholder");
     if (placeholderKey && strings[placeholderKey]) {
       (htmlEl as HTMLInputElement).placeholder = strings[placeholderKey];
+    }
+
+    // Check for alt text (Bildbeschreibung fuer Screenreader)
+    const altKey = htmlEl.getAttribute("data-i18n-alt");
+    if (altKey && strings[altKey] && htmlEl instanceof HTMLImageElement) {
+      htmlEl.alt = strings[altKey];
     }
 
     // Check for aria-label
