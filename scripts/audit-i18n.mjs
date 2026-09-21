@@ -36,33 +36,70 @@ function getKeysFromHtml(filePath) {
   return keys;
 }
 
-const enPath = path.join(ROOT, "src/lang/en.ts");
-const dePath = path.join(ROOT, "src/lang/de.ts");
+const LANG_DIR = path.join(ROOT, "src/lang");
+const REFERENCE = "en";
+const NON_LANGUAGE_FILES = new Set(["index.ts", "i18n-types.ts"]);
 
-const enKeys = getKeysFromTs(enPath);
-const deKeys = getKeysFromTs(dePath);
+// Find every language file instead of hardcoding EN/DE, so new languages are
+// checked automatically.
+const langFiles = fs
+  .readdirSync(LANG_DIR)
+  .filter((f) => f.endsWith(".ts") && !NON_LANGUAGE_FILES.has(f));
+const keysByLang = Object.fromEntries(
+  langFiles.map((f) => [f.replace(/\.ts$/, ""), getKeysFromTs(path.join(LANG_DIR, f))]),
+);
+const enKeys = keysByLang[REFERENCE] ?? new Set();
+let hasErrors = false;
 
 console.log("\x1b[36m%s\x1b[0m", "\n=== I18n Audit Results ===\n");
 
-// 1. Cross-Language Check
-console.log("\x1b[33m%s\x1b[0m", "[1/3] Dictionary Consistency:");
-const missingInEn = [...deKeys].filter((k) => !enKeys.has(k));
-const missingInDe = [...enKeys].filter((k) => !deKeys.has(k));
-
+// 1. Every language against the reference
+console.log("\x1b[33m%s\x1b[0m", "[1/4] Dictionary Consistency:");
 let dictError = false;
-if (missingInEn.length > 0) {
-  console.error(`  ❌ Missing in EN: ${missingInEn.join(", ")}`);
-  dictError = true;
+for (const [lang, keys] of Object.entries(keysByLang)) {
+  if (lang === REFERENCE) continue;
+  const tag = lang.toUpperCase();
+  const missing = [...enKeys].filter((k) => !keys.has(k));
+  const extra = [...keys].filter((k) => !enKeys.has(k));
+  if (missing.length > 0) {
+    console.error(`  ❌ Missing in ${tag}: ${missing.join(", ")}`);
+    dictError = true;
+  }
+  if (extra.length > 0) {
+    console.error(`  ❌ Unknown keys in ${tag} (not in ${REFERENCE.toUpperCase()}): ${extra.join(", ")}`);
+    dictError = true;
+  }
 }
-if (missingInDe.length > 0) {
-  console.error(`  ❌ Missing in DE: ${missingInDe.join(", ")}`);
-  dictError = true;
-}
-if (!dictError)
-  console.log("  ✅ EN and DE dictionaries are perfectly synced.");
+const langList = Object.keys(keysByLang).map((l) => l.toUpperCase()).join(", ");
+if (dictError) hasErrors = true;
+else console.log(`  ✅ All languages (${langList}) match ${REFERENCE.toUpperCase()}.`);
 
-// 2. HTML Usage Check
-console.log("\x1b[33m%s\x1b[0m", "\n[2/3] HTML Usage Check:");
+// 2. Registry, files and flags must line up
+console.log("\x1b[33m%s\x1b[0m", "\n[2/4] Language Registry:");
+const indexTs = fs.readFileSync(path.join(LANG_DIR, "index.ts"), "utf-8");
+const registered = [...indexTs.matchAll(/code:\s*["']([a-z]{2,3})["']/g)].map((m) => m[1]);
+let registryError = false;
+for (const lang of Object.keys(keysByLang)) {
+  if (!registered.includes(lang)) {
+    console.error(`  ❌ src/lang/${lang}.ts exists but is not registered in src/lang/index.ts`);
+    registryError = true;
+  }
+}
+for (const code of registered) {
+  if (!keysByLang[code]) {
+    console.error(`  ❌ "${code}" is registered but src/lang/${code}.ts is missing`);
+    registryError = true;
+  }
+  if (!fs.existsSync(path.join(ROOT, "public/images/flags", `${code}.svg`))) {
+    console.error(`  ❌ Flag missing: public/images/flags/${code}.svg`);
+    registryError = true;
+  }
+}
+if (registryError) hasErrors = true;
+else console.log(`  ✅ Registered: ${registered.join(", ")} (files and flags present).`);
+
+// 3. HTML Usage Check
+console.log("\x1b[33m%s\x1b[0m", "\n[3/4] HTML Usage Check:");
 const htmlFiles = [
   "index.html",
   "links.html",
@@ -98,11 +135,11 @@ allHtmlPaths.forEach((p) => {
   });
 });
 
-if (!usageIssues)
-  console.log("  ✅ All keys used in HTML are defined in the translations.");
+if (usageIssues) hasErrors = true;
+else console.log("  ✅ All keys used in HTML are defined in the translations.");
 
-// 3. Unused Keys Search
-console.log("\x1b[33m%s\x1b[0m", "\n[3/3] Potential Unused Keys:");
+// 4. Unused Keys Search
+console.log("\x1b[33m%s\x1b[0m", "\n[4/4] Potential Unused Keys:");
 // Also check main.ts for dynamic usage (like activeNavHighlight might use ids, but usually it's hardcoded)
 const mainTs = fs.readFileSync(path.join(ROOT, "src/main.ts"), "utf-8");
 const trulyUnused = [...enKeys].filter(
@@ -119,3 +156,6 @@ if (trulyUnused.length > 0) {
 }
 
 console.log("\n" + "=".repeat(26) + "\n");
+
+// Report failures through the exit code so the script works in CI/hooks too
+if (hasErrors) process.exitCode = 1;

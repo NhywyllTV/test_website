@@ -1,13 +1,27 @@
 import "./styles.css";
-import { translations } from "./lang/index";
+import {
+  translations,
+  languages,
+  DEFAULT_LANGUAGE,
+  isSupportedLanguage,
+} from "./lang/index";
 
-// Sprache festlegen: Wir prüfen erst localStorage, dann die Browser-Sprache (Standard ist English)
+// Sprache festlegen: erst die gespeicherte Wahl, dann die Browsersprachen, sonst DEFAULT_LANGUAGE.
 const getInitialLanguage = (): string => {
+  // Nur uebernehmen, wenn es die Sprache (noch) gibt - sonst saehe man nach dem
+  // Entfernen einer Sprache dauerhaft nur Uebersetzungsschluessel.
   const saved = localStorage.getItem("language");
-  if (saved) return saved;
+  if (isSupportedLanguage(saved)) return saved;
 
-  const browserLang = navigator.language.split("-")[0]; // z.B. 'de' oder 'en'
-  return browserLang === "de" ? "de" : "en";
+  // Bevorzugte Browsersprachen der Reihe nach; "de-AT" zaehlt als "de".
+  const preferred = navigator.languages?.length
+    ? navigator.languages
+    : [navigator.language];
+  for (const tag of preferred) {
+    const base = tag?.toLowerCase().split("-")[0];
+    if (isSupportedLanguage(base)) return base;
+  }
+  return DEFAULT_LANGUAGE;
 };
 
 let currentLanguage = getInitialLanguage();
@@ -97,6 +111,21 @@ function updateLanguageUI() {
 function setupLanguageSwitcher() {
   const switcher = document.querySelector(".language-switcher");
   const currentBtn = document.querySelector(".current-lang");
+
+  // Optionen aus dem Sprachregister erzeugen, damit neue Sprachen ohne
+  // Aenderung an header.html im Menue auftauchen.
+  const menu = document.getElementById("lang-menu");
+  menu?.replaceChildren(
+    ...languages.map(({ code, name }) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "lang-opt";
+      btn.dataset.lang = code;
+      btn.lang = code; // Screenreader sprechen den Sprachnamen in der Sprache selbst aus
+      btn.textContent = name;
+      return btn;
+    }),
+  );
   const options = document.querySelectorAll(".lang-opt");
 
   if (!switcher || !currentBtn) return;
@@ -121,7 +150,7 @@ function setupLanguageSwitcher() {
   options.forEach((opt) => {
     opt.addEventListener("click", () => {
       const lang = (opt as HTMLElement).dataset.lang;
-      if (lang && lang !== currentLanguage) {
+      if (isSupportedLanguage(lang) && lang !== currentLanguage) {
         currentLanguage = lang;
         localStorage.setItem("language", lang);
         updateTexts();
@@ -775,6 +804,10 @@ if (document.readyState === "loading") {
 
 // Global verfügbar machen für Notfälle
 (window as any).setLanguage = (lang: string) => {
+  if (!isSupportedLanguage(lang)) {
+    console.warn(`Unbekannte Sprache "${lang}". Verfuegbar:`, Object.keys(translations));
+    return;
+  }
   currentLanguage = lang;
   localStorage.setItem("language", lang);
   updateTexts();

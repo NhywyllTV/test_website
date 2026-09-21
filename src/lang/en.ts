@@ -1,6 +1,7 @@
 import type { Translation } from "./i18n-types";
 
-export const en: Translation = {
+// Referenzsprache: jede andere Sprache muss genau diese Schluessel haben.
+export const en = {
   page_title: "Nhywyll",
   page_title_social: "Social Links | Nhywyll",
   page_title_contact: "Contact | Nhywyll",
@@ -122,4 +123,4 @@ export const en: Translation = {
   cta_title: "Join the Community",
   cta_text: "Connect with other cozy gaming &amp; Minecraft enthusiasts on Discord. Get updates, share your builds, and chat with the coop!",
   cta_button: "Join Discord",
-};
+} satisfies Translation;

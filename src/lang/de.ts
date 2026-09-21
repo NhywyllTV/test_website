@@ -1,6 +1,6 @@
-import type { Translation } from './i18n-types';
+import type { CompleteTranslation } from './i18n-types';
 
-export const de: Translation = {
+export const de: CompleteTranslation = {
     "page_title": "Nhywyll",
     "page_title_social": "Soziale Links | Nhywyll",
     "page_title_contact": "Kontakt | Nhywyll",

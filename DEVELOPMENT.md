@@ -44,11 +44,19 @@ This document contains everything you need to know about developing, building, a
 
 ### 🌍 Adding/Editing Translations
 
-The project uses a custom i18n system. To add a new language:
+The project uses a custom i18n system. `en.ts` is the reference language: every other language must contain exactly its keys.
 
-1. Create a `src/lang/[lang-code].ts` file based on `en.ts`.
-2. Register the new language module in `src/lang/index.ts`.
-3. The UI will automatically pick up the new keys via `data-i18n` attributes.
+**Adding a new language** (e.g. French, `fr`):
+
+1. Copy `src/lang/de.ts` to `src/lang/fr.ts`, rename the export to `fr` and translate every value. Keep the type `CompleteTranslation` – the build then fails if a key is missing or misspelled.
+2. Add one entry to the `languages` registry in `src/lang/index.ts`:
+   `{ code: "fr", name: "Français", strings: fr }` (the name in the language itself).
+3. Add the flag as `public/images/flags/fr.svg`.
+4. Run `npm run audit:i18n` – it checks every language against `en.ts`, the registry and the flags.
+
+Everything else follows automatically: the language menu is built from the registry, and visitors whose browser prefers the new language get it on their first visit. The imprint and privacy texts (`imprint_full_text`, `privacy_full_text`) are legal texts – have a translation of those reviewed.
+
+**Adding/changing a text:** add the key to `en.ts` first, then to every other language (the build points out where it is missing), and reference it in HTML via `data-i18n`, `data-i18n-html`, `data-i18n-placeholder`, `data-i18n-aria-label` or `data-i18n-title`.
 
 ### 🔍 SEO & Sitemap
 
@@ -100,7 +108,7 @@ test_website/
 ├── src/                    # Source files for build
 │   ├── main.ts               # Core logic: i18n, Transitions, Effects & UI
 │   ├── styles.css            # Global style themes and variables
-│   └── lang/                 # Translation modules (de.ts, en.ts)
+│   └── lang/                 # Translations (en.ts = reference, de.ts) + registry in index.ts
 ├── index.html              # Hero, About & FAQ
 ├── links.html              # Social hub
 ├── contact.html            # Business center
@@ -129,7 +137,7 @@ All color values are defined as CSS variables in `src/styles.css`.
 | | Card Background | `--bg-card` | `rgba(235, 238, 248, 0.85)`| Soft lavender-gray |
 | | Primary Typography | `--text-primary` | `#2d314e` | Deep dark slate-navy |
 | | Primary Accent | `--accent-primary` | `#5c6494` | Darker dusty lavender |
-| | Secondary Accent | `--accent-secondary` | `#0d9488` | Saturated teal/cyan |
+| | Secondary Accent | `--accent-secondary` | `#0f766e` | Deep teal (dark enough for light text on the button gradient, 5.1:1) |
 
 ### 2. Typography
 * **Primary Font**: `Outfit` (loaded locally in `public/fonts/`). Used for headings, body, and navigation.
